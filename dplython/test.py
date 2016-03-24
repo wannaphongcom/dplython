@@ -2,13 +2,16 @@
 # 2016-02-21
 
 """Testing for python dplyr."""
+from __future__ import absolute_import
 
 import math
 import unittest
 
 import pandas
 
-from dplython import *
+from .dplython import *
+from six.moves import range
+from six.moves import zip
 
 
 class TestMutates(unittest.TestCase):
@@ -25,7 +28,7 @@ class TestMutates(unittest.TestCase):
 
   def test_newcolumn(self):
     diamonds_pd = self.diamonds.copy()
-    newcol = range(len(diamonds_pd))
+    newcol = list(range(len(diamonds_pd)))
     diamonds_pd["newcol"] = newcol
     diamonds_dp = self.diamonds >> mutate(newcol=newcol)
     self.assertTrue(diamonds_pd.equals(diamonds_dp))
@@ -286,8 +289,8 @@ class TestSummarize(unittest.TestCase):
 
 class TestAlternateAttrGrab(unittest.TestCase):
   diamonds = DplyFrame(pandas.read_csv('./diamonds.csv'))
-  diamonds["o m g"] = range(len(diamonds))
-  diamonds["0"] = range(len(diamonds))
+  diamonds["o m g"] = list(range(len(diamonds)))
+  diamonds["0"] = list(range(len(diamonds)))
 
   def testSelect(self):
     equality = self.diamonds[["o m g"]] == (self.diamonds >> select(X["o m g"]))
