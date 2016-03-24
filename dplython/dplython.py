@@ -2,6 +2,7 @@
 # 2016-02-17
 
 """Dplyr-style operations on top of pandas DataFrame."""
+from __future__ import absolute_import
 
 import itertools
 import operator
@@ -11,6 +12,10 @@ import types
 import numpy as np
 import pandas
 from pandas import DataFrame
+import six
+from six.moves import filter
+from six.moves import range
+from six.moves import zip
 
 
 __version__ = "0.0.1"
@@ -207,7 +212,7 @@ def CreateLaterFunction(fcn, *args, **kwargs):
     args = [a.applyFcns(self.origDf) if type(a) == Later else a 
         for a in self.args]
     kwargs = {k: v.applyFcns(self.origDf) if type(v) == Later else v 
-        for k, v in self.kwargs.iteritems()}
+        for k, v in six.iteritems(self.kwargs)}
     return self.fcn(*args, **kwargs)
   laterFcn.todo = [lambda df: apply_function(laterFcn, df)]
   return laterFcn
@@ -217,8 +222,8 @@ def DelayFunction(fcn):
   def DelayedFcnCall(*args, **kwargs):
     # Check to see if any args or kw are Later. If not, return normal fcn.
     checkIfLater = lambda x: type(x) == Later
-    if (len(filter(checkIfLater, args)) == 0 and 
-        len(filter(checkIfLater, kwargs.values())) == 0):
+    if (len(list(filter(checkIfLater, args))) == 0 and 
+        len(list(filter(checkIfLater, list(kwargs.values())))) == 0):
       return fcn(*args, **kwargs)
     else:
       return CreateLaterFunction(fcn, *args, **kwargs)
@@ -261,7 +266,7 @@ class DplyFrame(DataFrame):
     return DplyFrame
 
   def CreateGroupIndices(self, names, values):
-    final_filter = pandas.Series([True for t in xrange(len(self))])
+    final_filter = pandas.Series([True for t in range(len(self))])
     final_filter.index = self.index
     for (name, val) in zip(names, values):
       final_filter = final_filter & (self[name] == val)
@@ -276,14 +281,14 @@ class DplyFrame(DataFrame):
   def apply_on_groups(self, delayedFcn, otherDf):
     self.group_self(self._grouped_on)  # TODO: think about removing
     groups = []
-    for group_vals, group_inds in self._group_dict.iteritems():
+    for group_vals, group_inds in six.iteritems(self._group_dict):
       subsetDf = otherDf[group_inds]
       if len(subsetDf) > 0:
-        subsetDf._current_group = dict(zip(self._grouped_on, group_vals))
+        subsetDf._current_group = dict(list(zip(self._grouped_on, group_vals)))
         groups.append(delayedFcn(subsetDf))
 
     outDf = DplyFrame(pandas.concat(groups))
-    outDf.index = range(len(outDf))
+    outDf.index = list(range(len(outDf)))
     return outDf
 
   def __rshift__(self, delayedFcn):
@@ -320,7 +325,7 @@ def dfilter(*args):
   """
   def f(df):
     # TODO: This function is a candidate for improvement!
-    final_filter = pandas.Series([True for t in xrange(len(df))])
+    final_filter = pandas.Series([True for t in range(len(df))])
     final_filter.index = df.index
     for arg in args:
       stmt = arg.applyFcns(df)
@@ -371,7 +376,7 @@ def mutate(**kwargs):
   29  18018.000000          5       Fair
   """
   def addColumns(df):
-    for key, val in kwargs.iteritems():
+    for key, val in six.iteritems(kwargs):
       if type(val) == Later:
         df[key] = val.applyFcns(df)
       else:
@@ -389,7 +394,7 @@ def group_by(*args):
 
 def summarize(**kwargs):
   def CreateSummarizedDf(df):
-    input_dict = {k: val.applyFcns(df) for k, val in kwargs.iteritems()}
+    input_dict = {k: val.applyFcns(df) for k, val in six.iteritems(kwargs)}
     if len(input_dict) == 0:
       return DplyFrame({}, index=index)
     if hasattr(df, "_current_group") and df._current_group:
