@@ -16,7 +16,7 @@ setup(
     package_data={"dplython": ["data/diamonds.csv"]},
     package_dir={"dplython": "dplython"},
     # data_files = [("", ["dplython/diamonds.csv"])],
-    install_requires=["numpy", "pandas"],
+    install_requires=["numpy", "pandas","six","future"],
     maintainer="Chris Riederer",
     maintainer_email="OfficialChrisEmail@gmail.com",
     classifiers=[
