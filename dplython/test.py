@@ -9,7 +9,7 @@ import unittest
 
 import pandas
 
-from .dplython import *
+from dplython import *
 from six.moves import range
 from six.moves import zip
 
